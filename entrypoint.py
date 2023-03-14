@@ -1,28 +1,51 @@
 from fastapi import FastAPI
-
 app = FastAPI()
 
-@app.get('/hola/{nombre}')
-def hola(nombre):
-    return f'Hola {nombre}'
+biblioteca = {
+    
+    '1' : {
+        'NOMBRE' : 'Salvatore',
+        'EDAD' : 14,
+        'LIBROS': {
+            '1':{
+            'NOMBRE': 'Hábitos Atómicos',
+            'FECHA': '5/02/2023',
+            'ESTADO': 'Prestado'
+            },
+            '2':{
+            'NOMBRE': 'Principito',
+            'FECHA': '6/04/2022',
+            'ESTADO': 'Prestado'
+            }
+        }
+    },
+    
+    '2' : {
+        'NOMBRE' : 'Gabriela',
+        'EDAD' : 17,
+        'LIBROS': {
+            '1':{
+            'NOMBRE': 'Hábitos Atómicos',
+            'FECHA': '5/02/2023',
+            'ESTADO': 'Prestado'
+            },
+            '2':{
+            'NOMBRE': 'Principito',
+            'FECHA': '6/04/2022',
+            'ESTADO': 'Prestado'
+            }
+        }
+    }
+}
+
+@app.get('/{id}')
+def usuario(id:str):
+   return biblioteca[id]
 
 
-@app.get('/adios')
-def adios():
-    return 'Adiós mundo'
+@app.get('/{id}/{idlib}')
+def libro(id:str, idlib:str):
+   return biblioteca[id]["LIBROS"][idlib]
 
 
-@app.get('/mañana')
-def hola():
-    return 'Buenos días'
-
-
-@app.get('/tarde')
-def adios():
-    return 'Buenas tardes'
-
-
-@app.get('/noche')
-def hola():
-    return 'Buenas noches'
 
