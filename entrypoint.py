@@ -2,98 +2,112 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 
 class PerBiblioteca(BaseModel):
-    id:str
-    nombre:str
-    edad:int
-    libros:dict
+    ID:str
+    NOMBRE:str
+    EDAD:int
+    LIBROS:dict
     
-app = FastAPI()
+class Lib(BaseModel):
+    ID_LIB:str
+    NOMBRE:str
+    FECHA:str
+     
 
-biblioteca = {
     
-    '1' : {
-        'NOMBRE' : 'Salvatore',
-        'EDAD' : 14,
-        'LIBROS': {
-            '1':{
-            'NOMBRE': 'Hábitos Atómicos',
-            'FECHA': '5/02/2023',
-            'ESTADO': 'Prestado'
-            },
-            '2':{
-            'NOMBRE': 'Principito',
-            'FECHA': '6/04/2022',
-            'ESTADO': 'Prestado'
-            }
-        }
-    },
-    
-    '2' : {
-        'NOMBRE' : 'Gabriela',
-        'EDAD' : 17,
-        'LIBROS': {
-            '1':{
-            'NOMBRE': 'Hábitos Atómicos',
-            'FECHA': '5/02/2023',
-            'ESTADO': 'Prestado'
-            },
-            '2':{
-            'NOMBRE': 'Principito',
-            'FECHA': '6/04/2022',
-            'ESTADO': 'Prestado'
-            }
-        }
-    }
-}
+app = FastAPI(
+    title = 'Server',
+    version = 'v0.0.5'
+)
+
+biblioteca = {}
 
 @app.get('/')
 def check():
    return {
        'Título' : 'Biblioteca STEAM ACADEMY',
-       'Versión' : 'v 0.0.1'
+       'Versión' : 'v 0.0.5'
    }
 
 
-@app.get('/personas')
+@app.get('/personas', tags=['GET'])
 def todos():
    return biblioteca
 
 
-@app.get('/personas/{id}')
-def uno(id:str):
-    if id not in biblioteca:
-        return 'El usuario no se encuentra disponible'
-    else:
-        return biblioteca[id]
+@app.get('/personas/{ID}', tags=['GET'])
+def uno(ID:str):
+    try:
+        return biblioteca[ID]
+    except ValueError:
+        return f'Por favor ingrese un ID correcto'
+    except KeyError:
+        return f'Por favor ingrese un ID correcto, el ID {ID}, no se encuentra disponible'
+    except Exception:
+        return f'Error no definido, intente de nuevo'
 
-
-@app.post('/personas/{id}/agregar')
+@app.post('/personas/{ID}/agregar', tags=['POST'])
 def uno_mas(request:PerBiblioteca):
-    biblioteca.update({request.id : request})
-    return 'El usuario se ha agregado correctamente'
+    try:
+        biblioteca.update({request.ID : request})
+        return 'El usuario se ha agregado correctamente'
+    except ValueError:
+        return 'Valores incorrectos, por favor intente de nuevo'
+    except Exception:
+        return 'Error no definido, intente de nuevo'
 
 
-@app.delete('/personas/{id}/eliminar')
-def uno_menos(id:str):
-    if id not in biblioteca:
-        return 'El usuario no se encuentra disponible'
-    else:
-        biblioteca.pop(id)
-        return 'El usuario se ha eliminado correctamente'
+@app.delete('/personas/{ID}/eliminar', tags=['DELETE'])
+def uno_menos(ID:str):
+    try:
+        biblioteca.pop(ID)
+        return 'El usuario se ha eliminado correctamente' 
+    except KeyError:
+        return 'El usuario no se encuentra disponible, intente de nuevo'
+    except Exception:
+        return 'Error no definido, intente de nuevo'
+        
+
+@app.put('/personas/{ID}/cambiar', tags=['PUT'])
+def uno_diferente(ID:str, NewNom:str, NewEdad:int):
+    try:
+        nuevo = {
+            'NOMBRE': NewNom,
+            'EDAD' : NewEdad,
+            'LIBROS' : biblioteca[ID]['LIBROS']
+            }
+        biblioteca[ID] = nuevo
+        return 'Tu usuario se ha cambiado correctamente'  
+    except ValueError:
+        return 'Los valores no son correctos, intente de nuevo'
+    except KeyError:
+        return 'El usuario no se encuentra disponible, no se pudo cambiar la información'
+    except Exception:
+        return 'Error no definido, intente de nuevo'
 
 
-@app.put('/personas/{id}/cambiar')
-def uno_diferente(id:str, NewNom:str, NewEdad:int):
-    nuevo = {
-        'NOMBRE': NewNom,
-        'EDAD' : NewEdad,
-        'LIBROS' : biblioteca[id]['LIBROS']
-        }
-    biblioteca.update({id:nuevo})
-    return 'Tu usuario se ha cambiado correctamente'
+@app.put('/libros/{ID}/devolverLib', tags=['PUT'])
+def devolver_libro(ID:str, IdLib:str):
+    try:
+        biblioteca[ID]['LIBROS'][IdLib]['ESTADO'] = 'Devuelto'
+        return 'El libro se ha devuelto correctamente'
+    except ValueError:
+        return 'Los valores no son correctos, intente de nuevo'
+    except KeyError:
+        return 'El usuario no se encuentra disponible, intente de nuevo'
+    except Exception:
+        return 'Error no definido, intente de nuevo'
 
 
-@app.put('/personas/{id}/devolverLib')
-def devolver_libro(id:str, IdLib:str):
-    biblioteca[id]['LIBROS'][IdLib]['ESTADO'] = 'Devuelto'
-    return 'El libro se ha devuelto correctamente'
+@app.post('/libros/{ID}/prestarLib', tags=['POST'])
+def prestar_libro(request:Lib, ID:str):
+    try:
+        biblioteca[ID.LIBROS][request.ID_LIB] = request
+        return 'El libro se ha prestado correctamente'
+    except ValueError:
+        return 'Los valores no son correctos, intente de nuevo'
+    except KeyError:
+        return 'El usuario que intenta prestar un libro no se encuentra disponible, intente de nuevo'
+    except IndexError:
+        return 'El usuario que intenta prestar un libro no se encuentra disponible, intente de nuevo'
+    except Exception:
+        return 'Error no definido, intente de nuevo'
